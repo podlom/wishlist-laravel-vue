@@ -1,0 +1,51 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+auth.json
+
+# PHP / Laravel
+/backend/vendor/
+/backend/storage/logs/*
+/backend/storage/framework/cache/*
+/backend/storage/framework/sessions/*
+/backend/storage/framework/views/*
+/backend/bootstrap/cache/*.php
+/backend/database/*.sqlite
+/backend/database/*.sqlite-*
+/backend/.phpunit.cache
+/backend/.phpunit.result.cache
+/backend/coverage/
+
+# JavaScript / Vue / Vite
+**/node_modules/
+**/dist/
+**/coverage/
+**/.vite/
+**/.npm/
+
+# Local test payloads
+/test-wish.json
+/test-wishlist.json
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Operating systems
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
