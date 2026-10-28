@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\ReorderWishController;
 use App\Http\Controllers\Api\WishController;
 use App\Http\Controllers\Api\WishlistController;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +20,10 @@ Route::get(
     [WishlistController::class, 'wishes']
 );
 
+Route::patch(
+    'wishlists/{wishlist}/reorder',
+    ReorderWishController::class
+);
 Route::apiResource('wishlists', WishlistController::class);
 
 Route::apiResource('wishes', WishController::class);
