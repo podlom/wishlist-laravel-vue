@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\WishResource;
 use App\Models\Wishlist;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -50,7 +51,17 @@ class WishlistController extends Controller
     {
         $wishlist->load('wishes');
 
-        return response()->json($wishlist);
+        return response()->json([
+            'id' => $wishlist->id,
+            'name' => $wishlist->name,
+            'description' => $wishlist->description,
+            'sort_order' => $wishlist->sort_order,
+            'wishes' => WishResource::collection(
+                $wishlist->wishes
+            )->resolve(),
+            'created_at' => $wishlist->created_at?->toISOString(),
+            'updated_at' => $wishlist->updated_at?->toISOString(),
+        ]);
     }
 
     public function update(
@@ -84,6 +95,8 @@ class WishlistController extends Controller
 
     public function wishes(Wishlist $wishlist): JsonResponse
     {
-        return response()->json($wishlist->wishes);
+        return response()->json(
+            WishResource::collection($wishlist->wishes)->resolve()
+        );
     }
 }

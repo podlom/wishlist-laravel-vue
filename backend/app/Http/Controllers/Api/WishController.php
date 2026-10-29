@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\WishResource;
 use App\Models\Wish;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,9 @@ class WishController extends Controller
             ->orderBy('id')
             ->get();
 
-        return response()->json($wishes);
+        return response()->json(
+            WishResource::collection($wishes)->resolve()
+        );
     }
 
     public function store(Request $request): JsonResponse
@@ -42,12 +45,17 @@ class WishController extends Controller
             return Wish::create($data);
         });
 
-        return response()->json($wish, 201);
+        return response()->json(
+            (new WishResource($wish))->resolve(),
+            201
+        );
     }
 
     public function show(Wish $wish): JsonResponse
     {
-        return response()->json($wish);
+        return response()->json(
+            (new WishResource($wish))->resolve()
+        );
     }
 
     public function update(
@@ -84,7 +92,9 @@ class WishController extends Controller
             return $wish->refresh();
         });
 
-        return response()->json($wish);
+        return response()->json(
+            (new WishResource($wish))->resolve()
+        );
     }
 
     public function destroy(Wish $wish): Response

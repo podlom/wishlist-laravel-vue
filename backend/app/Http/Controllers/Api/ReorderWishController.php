@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\WishResource;
 use App\Models\Wish;
 use App\Models\Wishlist;
 use Illuminate\Http\JsonResponse;
@@ -79,7 +80,7 @@ class ReorderWishController extends Controller
 
         return response()->json([
             'message' => 'Wishlist reordered successfully.',
-            'data' => $orderedWishes,
+            'data' => WishResource::collection($orderedWishes)->resolve(),
         ]);
     }
 }
