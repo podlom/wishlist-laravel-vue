@@ -13,7 +13,7 @@ services:
   swagger-editor:
     image: docker.swagger.io/swaggerapi/swagger-editor:latest
     ports:
-      - "127.0.0.1:8082:8080"
+      - "127.0.0.1:8082:80"
     environment:
       SWAGGER_FILE: /openapi/openapi.yaml
     volumes:
