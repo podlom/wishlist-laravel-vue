@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreWishlistRequest;
+use App\Http\Requests\UpdateWishlistRequest;
 use App\Http\Resources\WishResource;
 use App\Models\Wishlist;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+// use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -26,12 +28,9 @@ class WishlistController extends Controller
         return response()->json($wishlists);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreWishlistRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-        ]);
+        $data = $request->validated();
 
         $wishlist = DB::transaction(function () use ($data): Wishlist {
             $nextOrder = ((int) Wishlist::query()
@@ -65,13 +64,10 @@ class WishlistController extends Controller
     }
 
     public function update(
-        Request $request,
+        UpdateWishlistRequest $request,
         Wishlist $wishlist
     ): JsonResponse {
-        $data = $request->validate([
-            'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'description' => ['sometimes', 'nullable', 'string'],
-        ]);
+        $data = $request->validated();
 
         $wishlist->update($data);
 

@@ -5,24 +5,22 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ReorderWishlistWishesRequest;
 use App\Http\Resources\WishResource;
 use App\Models\Wish;
 use App\Models\Wishlist;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+// use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ReorderWishController extends Controller
 {
     public function __invoke(
-        Request $request,
+        ReorderWishlistWishesRequest $request,
         Wishlist $wishlist
     ): JsonResponse {
-        $validated = $request->validate([
-            'wish_ids' => ['required', 'array'],
-            'wish_ids.*' => ['required', 'integer', 'distinct', 'min:1'],
-        ]);
+        $validated = $request->validated();
 
         $orderedWishes = DB::transaction(
             function () use ($wishlist, $validated) {
