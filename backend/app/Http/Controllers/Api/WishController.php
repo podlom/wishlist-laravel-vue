@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreWishRequest;
+use App\Http\Requests\UpdateWishRequest;
 use App\Http\Resources\WishResource;
 use App\Models\Wish;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+// use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
+// use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class WishController extends Controller
@@ -29,9 +31,9 @@ class WishController extends Controller
         );
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreWishRequest $request): JsonResponse
     {
-        $data = $request->validate($this->rules());
+        $data = $request->validated();
 
         $this->validateProductUrl(
             $data['product_url'] ?? null
@@ -59,12 +61,10 @@ class WishController extends Controller
     }
 
     public function update(
-        Request $request,
+        UpdateWishRequest $request,
         Wish $wish
     ): JsonResponse {
-        $data = $request->validate(
-            $this->rules(partial: true)
-        );
+        $data = $request->validated();
 
         if (array_key_exists('product_url', $data)) {
             $this->validateProductUrl(
