@@ -1,0 +1,508 @@
+openapi: 3.0.3
+
+info:
+  title: Wishlist REST API
+  version: 1.0.0
+  description: |
+    Laravel 12 REST API for managing multiple wishlists, wishes,
+    purchases, and custom ordering.
+
+    Local development API. Authentication is not implemented yet.
+
+servers:
+  - url: http://localhost:8080/api
+    description: Local Docker development
+
+tags:
+  - name: Health
+  - name: Wishlists
+  - name: Wishes
+  - name: Ordering
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Check API health
+      operationId: healthCheck
+      responses:
+        '200':
+          description: API is operational
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  application:
+                    type: string
+                    example: Wishlist API
+                  version:
+                    type: string
+                    example: 1.0.0
+
+  /wishlists:
+    get:
+      tags: [Wishlists]
+      summary: List all wishlists
+      operationId: listWishlists
+      responses:
+        '200':
+          description: Ordered wishlists with wish counts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/Wishlist'
+                    - type: object
+                      properties:
+                        wishes_count:
+                          type: integer
+                          example: 5
+
+    post:
+      tags: [Wishlists]
+      summary: Create wishlist
+      operationId: createWishlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WishlistInput'
+      responses:
+        '201':
+          description: Wishlist created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wishlist'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /wishlists/{wishlist}:
+    parameters:
+      - $ref: '#/components/parameters/WishlistId'
+
+    get:
+      tags: [Wishlists]
+      summary: Get wishlist with its wishes
+      operationId: getWishlist
+      responses:
+        '200':
+          description: Wishlist details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Wishlist'
+                  - type: object
+                    properties:
+                      wishes:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Wish'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Wishlists]
+      summary: Update wishlist
+      operationId: updateWishlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WishlistUpdate'
+      responses:
+        '200':
+          description: Updated wishlist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wishlist'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      tags: [Wishlists]
+      summary: Delete an empty wishlist
+      description: A wishlist containing wishes cannot be deleted.
+      operationId: deleteWishlist
+      responses:
+        '204':
+          description: Wishlist deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /wishlists/{wishlist}/wishes:
+    parameters:
+      - $ref: '#/components/parameters/WishlistId'
+
+    get:
+      tags: [Wishlists]
+      summary: List wishes in custom order
+      operationId: listWishlistWishes
+      responses:
+        '200':
+          description: Wishes ordered by sort_order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Wish'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /wishlists/{wishlist}/reorder:
+    parameters:
+      - $ref: '#/components/parameters/WishlistId'
+
+    patch:
+      tags: [Ordering]
+      summary: Reorder wishes in a wishlist
+      description: |
+        Supply every wish ID belonging to this wishlist exactly once,
+        in the desired order. Positions are assigned starting at zero.
+      operationId: reorderWishes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [wish_ids]
+              properties:
+                wish_ids:
+                  type: array
+                  items:
+                    type: integer
+                  example: [5, 1, 3, 2, 4]
+      responses:
+        '200':
+          description: Wishes reordered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Wish'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /wishes:
+    get:
+      tags: [Wishes]
+      summary: List all wishes
+      operationId: listWishes
+      responses:
+        '200':
+          description: Wishes from all lists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Wish'
+
+    post:
+      tags: [Wishes]
+      summary: Create a wish
+      operationId: createWish
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WishInput'
+      responses:
+        '201':
+          description: Wish created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wish'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /wishes/{wish}:
+    parameters:
+      - $ref: '#/components/parameters/WishId'
+
+    get:
+      tags: [Wishes]
+      summary: Get a wish
+      operationId: getWish
+      responses:
+        '200':
+          description: Wish details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wish'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Wishes]
+      summary: Update or move a wish
+      description: |
+        Changing wishlist_id moves the wish to the end of the
+        destination wishlist.
+      operationId: updateWish
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WishUpdate'
+      responses:
+        '200':
+          description: Updated wish
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wish'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      tags: [Wishes]
+      summary: Delete a wish
+      operationId: deleteWish
+      responses:
+        '204':
+          description: Wish deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  parameters:
+    WishlistId:
+      name: wishlist
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 1
+
+    WishId:
+      name: wish
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 1
+
+  responses:
+    NotFound:
+      description: Resource not found
+
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+
+  schemas:
+    Wishlist:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          example: My Wishlist
+        description:
+          type: string
+          nullable: true
+        sort_order:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    WishlistInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          example: Books Wishlist
+        description:
+          type: string
+          nullable: true
+
+    WishlistUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+
+    Wish:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        wishlist_id:
+          type: integer
+        sort_order:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        brand:
+          type: string
+          nullable: true
+        product_url:
+          type: string
+          format: uri
+          nullable: true
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+        price:
+          type: string
+          nullable: true
+          example: '10989.00'
+        original_price:
+          type: string
+          nullable: true
+          example: '5795.00'
+        currency:
+          type: string
+          example: UAH
+        is_purchased:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    WishInput:
+      type: object
+      required: [wishlist_id, title]
+      properties:
+        wishlist_id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          maxLength: 255
+          example: New Book
+        description:
+          type: string
+          nullable: true
+        brand:
+          type: string
+          nullable: true
+        product_url:
+          type: string
+          format: uri
+          nullable: true
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+        price:
+          type: number
+          minimum: 0
+          example: 450
+        original_price:
+          type: number
+          minimum: 0
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: UAH
+        is_purchased:
+          type: boolean
+
+    WishUpdate:
+      type: object
+      description: Only supplied properties are updated.
+      properties:
+        wishlist_id:
+          type: integer
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+        brand:
+          type: string
+          nullable: true
+        product_url:
+          type: string
+          format: uri
+          nullable: true
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+        price:
+          type: number
+          nullable: true
+          minimum: 0
+        original_price:
+          type: number
+          nullable: true
+          minimum: 0
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        is_purchased:
+          type: boolean
