@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Models\Wish;
+use App\Models\Wishlist;
 use Illuminate\Database\Seeder;
 
 class WishSeeder extends Seeder
@@ -49,10 +50,27 @@ class WishSeeder extends Seeder
             ],
         ];
 
+        $defaultWishlist = Wishlist::query()
+            ->orderBy('id')
+            ->firstOrFail();
+
         foreach ($wishes as $wish) {
+            $nextPosition = ((int) (
+                Wish::query()
+                    ->where('wishlist_id', $defaultWishlist->id)
+                    ->max('sort_order') ?? -1
+            )) + 1;
+
             Wish::firstOrCreate(
-                ['product_url_hash' => hash('sha256', $wish['product_url'])],
+                [
+                    'product_url_hash' => hash(
+                        'sha256',
+                        $wish['product_url']
+                    ),
+                ],
                 array_merge($wish, [
+                    'wishlist_id' => $defaultWishlist->id,
+                    'sort_order' => $nextPosition,
                     'currency' => 'UAH',
                     'is_purchased' => false,
                 ])
