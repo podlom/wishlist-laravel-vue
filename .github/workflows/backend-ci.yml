@@ -107,7 +107,7 @@ jobs:
           cp .env.example .env
           php artisan key:generate --force
 
-            - name: Verify MySQL PDO driver
+      - name: Verify MySQL PDO driver
         env:
           APP_ENV: testing
           DB_CONNECTION: mysql
