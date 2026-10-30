@@ -107,6 +107,29 @@ jobs:
           cp .env.example .env
           php artisan key:generate --force
 
+            - name: Verify MySQL PDO driver
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: wishlist_test
+          DB_USERNAME: wishlist_test
+          DB_PASSWORD: wishlist_test_password
+        run: |
+          php -r '
+          require "vendor/autoload.php";
+          $app = require "bootstrap/app.php";
+          $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+          $driver = \Illuminate\Support\Facades\DB::connection()
+              ->getPdo()->getAttribute(\PDO::ATTR_DRIVER_NAME);
+          echo "Active PDO driver: $driver\n";
+          if ($driver !== "mysql") {
+              fwrite(STDERR, "Expected MySQL driver\n");
+              exit(1);
+          }
+          '
+
       - name: Run MySQL integration tests
         env:
           APP_ENV: testing
