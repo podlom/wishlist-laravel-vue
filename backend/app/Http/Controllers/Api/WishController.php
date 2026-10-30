@@ -10,10 +10,8 @@ use App\Http\Requests\UpdateWishRequest;
 use App\Http\Resources\WishResource;
 use App\Models\Wish;
 use Illuminate\Http\JsonResponse;
-// use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-// use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class WishController extends Controller
