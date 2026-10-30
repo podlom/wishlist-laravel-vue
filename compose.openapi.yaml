@@ -19,3 +19,15 @@ services:
     volumes:
       - ./docs/openapi.yaml:/openapi/openapi.yaml:ro
     restart: unless-stopped
+
+  openapi-lint:
+    image: redocly/cli:latest
+    working_dir: /spec
+    volumes:
+      - ./docs:/spec:ro
+    command:
+      - lint
+      - openapi.yaml
+      - --extends=spec
+    profiles:
+      - tools
