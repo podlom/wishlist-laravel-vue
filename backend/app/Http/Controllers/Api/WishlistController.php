@@ -10,7 +10,7 @@ use App\Http\Requests\UpdateWishlistRequest;
 use App\Http\Resources\WishResource;
 use App\Models\Wishlist;
 use Illuminate\Http\JsonResponse;
-// use Illuminate\Http\Request;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -26,12 +26,17 @@ class WishlistController extends Controller
     {
         $data = $request->validated();
 
-        $wishlist = DB::transaction(function () use ($data): Wishlist {
-            $nextOrder = ((int) Wishlist::query()
-                ->lockForUpdate()
-                ->max('sort_order')) + 1;
+        $wishlist = DB::transaction(function () use ($request, $data): Wishlist {
+            $user = $request->user();
 
-            return Wishlist::create([
+            $maxOrder = $user->wishlists()
+                ->max('sort_order');
+
+            $nextOrder = $maxOrder === null
+                ? 0
+                : (int) $maxOrder + 1;
+
+            return $user->wishlists()->create([
                 ...$data,
                 'sort_order' => $nextOrder,
             ]);
@@ -40,8 +45,10 @@ class WishlistController extends Controller
         return response()->json($wishlist, 201);
     }
 
-    public function show(Wishlist $wishlist): JsonResponse
+    public function show(Wishlist $wishlist, Request $request): JsonResponse
     {
+        $this->ensureOwner($wishlist, $request);
+
         $wishlist->load('wishes');
 
         return response()->json([
@@ -61,6 +68,8 @@ class WishlistController extends Controller
         UpdateWishlistRequest $request,
         Wishlist $wishlist
     ): JsonResponse {
+        $this->ensureOwner($wishlist, $request);
+
         $data = $request->validated();
 
         $wishlist->update($data);
@@ -68,8 +77,10 @@ class WishlistController extends Controller
         return response()->json($wishlist->refresh());
     }
 
-    public function destroy(Wishlist $wishlist): Response
+    public function destroy(Wishlist $wishlist, Request $request): Response
     {
+        $this->ensureOwner($wishlist, $request);
+
         if ($wishlist->wishes()->exists()) {
             throw ValidationException::withMessages([
                 'wishlist' => [
@@ -83,10 +94,20 @@ class WishlistController extends Controller
         return response()->noContent();
     }
 
-    public function wishes(Wishlist $wishlist): JsonResponse
+    public function wishes(Wishlist $wishlist, Request $request): JsonResponse
     {
+        $this->ensureOwner($wishlist, $request);
+
         return response()->json(
             WishResource::collection($wishlist->wishes)->resolve()
+        );
+    }
+
+    private function ensureOwner(Wishlist $wishlist, Request $request): void
+    {
+        abort_unless(
+            (int) $wishlist->user_id === (int) $request->user()->id,
+            404
         );
     }
 }

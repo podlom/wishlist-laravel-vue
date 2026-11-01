@@ -9,16 +9,21 @@ use App\Http\Requests\StoreWishRequest;
 use App\Http\Requests\UpdateWishRequest;
 use App\Http\Resources\WishResource;
 use App\Models\Wish;
+use App\Models\Wishlist;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class WishController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $wishes = Wish::query()
+            ->whereHas('wishlist', function ($query) use ($request): void {
+                $query->where('user_id', $request->user()->id);
+            })
             ->orderBy('wishlist_id')
             ->orderBy('sort_order')
             ->orderBy('id')
@@ -51,8 +56,10 @@ class WishController extends Controller
         );
     }
 
-    public function show(Wish $wish): JsonResponse
+    public function show(Wish $wish, Request $request): JsonResponse
     {
+        $this->ensureOwner($wish, $request);
+
         return response()->json(
             (new WishResource($wish))->resolve()
         );
@@ -62,6 +69,8 @@ class WishController extends Controller
         UpdateWishRequest $request,
         Wish $wish
     ): JsonResponse {
+        $this->ensureOwner($wish, $request);
+
         $data = $request->validated();
 
         if (array_key_exists('product_url', $data)) {
@@ -95,8 +104,10 @@ class WishController extends Controller
         );
     }
 
-    public function destroy(Wish $wish): Response
+    public function destroy(Wish $wish, Request $request): Response
     {
+        $this->ensureOwner($wish, $request);
+
         $wish->delete();
 
         return response()->noContent();
@@ -135,5 +146,15 @@ class WishController extends Controller
                 ],
             ]);
         }
+    }
+
+    private function ensureOwner(Wish $wish, Request $request): void
+    {
+        $belongsToUser = Wishlist::query()
+            ->whereKey($wish->wishlist_id)
+            ->where('user_id', $request->user()->id)
+            ->exists();
+
+        abort_unless($belongsToUser, 404);
     }
 }

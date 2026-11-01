@@ -20,7 +20,8 @@ class StoreWishRequest extends FormRequest
             'wishlist_id' => [
                 'required',
                 'integer',
-                Rule::exists('wishlists', 'id'),
+                Rule::exists('wishlists', 'id')
+                    ->where('user_id', $this->user()->id),
             ],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['sometimes', 'nullable', 'string'],

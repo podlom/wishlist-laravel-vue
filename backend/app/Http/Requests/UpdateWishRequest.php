@@ -21,7 +21,8 @@ class UpdateWishRequest extends FormRequest
                 'sometimes',
                 'required',
                 'integer',
-                Rule::exists('wishlists', 'id'),
+                Rule::exists('wishlists', 'id')
+                    ->where('user_id', $this->user()->id),
             ],
             'title' => [
                 'sometimes', 'required', 'string', 'max:255',

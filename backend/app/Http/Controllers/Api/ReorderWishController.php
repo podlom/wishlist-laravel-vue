@@ -20,13 +20,19 @@ class ReorderWishController extends Controller
         ReorderWishlistWishesRequest $request,
         Wishlist $wishlist
     ): JsonResponse {
+        abort_unless(
+            (int) $wishlist->user_id === (int) $request->user()->id,
+            404
+        );
+
         $validated = $request->validated();
 
         $orderedWishes = DB::transaction(
-            function () use ($wishlist, $validated) {
+            function () use ($wishlist, $validated, $request) {
                 // Serialize reorder requests for this wishlist.
                 Wishlist::query()
                     ->whereKey($wishlist->id)
+                    ->where('user_id', $request->user()->id)
                     ->lockForUpdate()
                     ->firstOrFail();
 
