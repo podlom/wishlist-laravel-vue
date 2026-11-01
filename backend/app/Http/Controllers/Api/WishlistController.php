@@ -19,13 +19,7 @@ class WishlistController extends Controller
 {
     public function index(): JsonResponse
     {
-        $wishlists = Wishlist::query()
-            ->withCount('wishes')
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get();
-
-        return response()->json($wishlists);
+        return response()->json([]);
     }
 
     public function store(StoreWishlistRequest $request): JsonResponse

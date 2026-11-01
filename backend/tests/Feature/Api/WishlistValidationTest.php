@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
+use App\Models\User;
 use App\Models\Wish;
 use App\Models\Wishlist;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,9 +14,20 @@ class WishlistValidationTest extends TestCase
 {
     use RefreshDatabase;
 
+    private User $owner;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->owner = User::factory()->create();
+
+        $this->actingAs($this->owner, 'web');
+    }
+
     private function createWishlist(string $name): Wishlist
     {
-        return Wishlist::create([
+        return $this->owner->wishlists()->create([
             'name' => $name,
             'sort_order' => 0,
         ]);

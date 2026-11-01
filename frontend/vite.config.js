@@ -13,6 +13,10 @@ export default defineConfig({
       '/api': {
         target: 'http://nginx:80',
         changeOrigin: true,
+       },
+      '/sanctum': {
+        target: 'http://nginx:80',
+        changeOrigin: true,
       },
     },
   },

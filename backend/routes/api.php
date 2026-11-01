@@ -15,15 +15,21 @@ Route::get('/health', function () {
     ]);
 });
 
-Route::get(
-    'wishlists/{wishlist}/wishes',
-    [WishlistController::class, 'wishes']
-);
+Route::get('/wishlists', [WishlistController::class, 'index']);
 
-Route::patch(
-    'wishlists/{wishlist}/reorder',
-    ReorderWishController::class
-);
-Route::apiResource('wishlists', WishlistController::class);
+Route::middleware('auth:sanctum')->group(function (): void {
+    Route::get(
+        '/wishlists/{wishlist}/wishes',
+        [WishlistController::class, 'wishes']
+    );
 
-Route::apiResource('wishes', WishController::class);
+    Route::patch(
+        '/wishlists/{wishlist}/reorder',
+        ReorderWishController::class
+    );
+
+    Route::apiResource('wishlists', WishlistController::class)
+        ->except(['index']);
+
+    Route::apiResource('wishes', WishController::class);
+});
