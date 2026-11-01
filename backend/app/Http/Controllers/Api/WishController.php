@@ -39,7 +39,8 @@ class WishController extends Controller
         $data = $request->validated();
 
         $this->validateProductUrl(
-            $data['product_url'] ?? null
+            $data['product_url'] ?? null,
+            (int) $data['wishlist_id']
         );
 
         $wish = DB::transaction(function () use ($data): Wish {
@@ -73,21 +74,30 @@ class WishController extends Controller
 
         $data = $request->validated();
 
-        if (array_key_exists('product_url', $data)) {
+        $destinationId = (int) (
+            $data['wishlist_id'] ?? $wish->wishlist_id
+        );
+
+        $url = array_key_exists('product_url', $data)
+            ? $data['product_url']
+            : $wish->product_url;
+
+        if (
+            array_key_exists('product_url', $data) ||
+            $destinationId !== (int) $wish->wishlist_id
+        ) {
             $this->validateProductUrl(
-                $data['product_url'],
+                $url,
+                $destinationId,
                 $wish->id
             );
         }
 
         $wish = DB::transaction(function () use (
             $wish,
-            $data
+            $data,
+            $destinationId
         ): Wish {
-            $destinationId = (int) (
-                $data['wishlist_id'] ?? $wish->wishlist_id
-            );
-
             if ($destinationId !== (int) $wish->wishlist_id) {
                 $data['sort_order'] = $this->nextPosition(
                     $destinationId
@@ -124,6 +134,7 @@ class WishController extends Controller
 
     private function validateProductUrl(
         ?string $url,
+        int $wishlistId,
         ?int $exceptId = null
     ): void {
         if ($url === null) {
@@ -133,6 +144,7 @@ class WishController extends Controller
         $hash = hash('sha256', $url);
 
         $query = Wish::query()
+            ->where('wishlist_id', $wishlistId)
             ->where('product_url_hash', $hash);
 
         if ($exceptId !== null) {
@@ -142,7 +154,7 @@ class WishController extends Controller
         if ($query->exists()) {
             throw ValidationException::withMessages([
                 'product_url' => [
-                    'This product URL already exists in a wishlist.',
+                    'This product URL already exists in this wishlist.',
                 ],
             ]);
         }
