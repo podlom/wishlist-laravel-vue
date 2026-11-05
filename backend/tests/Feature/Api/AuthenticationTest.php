@@ -6,6 +6,7 @@ namespace Tests\Feature\Api;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -137,6 +138,10 @@ class AuthenticationTest extends TestCase
 
         $this->getJson('/api/user')
             ->assertUnauthorized();
+
+        // Each real HTTP request has a fresh request-scoped guard.
+        // Reset Sanctum's cached user between simulated requests.
+        Auth::guard('sanctum')->forgetUser();
 
         $this->getJson('/api/wishes')
             ->assertUnauthorized();
